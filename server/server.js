@@ -24,6 +24,7 @@ app.post('/todos', (req, res) => {
 });
 
 app.post('/users', (req, res) => {
+  console.log(req.body);
   var newUser = new user({
     name: req.body.name,
     email: req.body.email
