@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
-const { mongoose } = require('../db/mongoose');
+const { mongoose, ObjectID } = require('../db/mongoose');
 const { todo } = require('../models/todos');
 const { user } = require('../models/users');
 
@@ -41,26 +41,63 @@ app.post('/users', (req, res) => {
 
 });
 
+app.get('/todos', (req, res) => {
+  console.log(req.body);
+  todo.find().
+    then(
+      (docs) => {
+        res.status(200).send(docs);
+      },
+      (err) => {
+        res.status(400).send(err.message);
+      });
+})
+
+app.get('/users', (req, res) => {
+  console.log(req.body);
+  user.find().then((docs) => {
+    res.status(200).send(docs);
+  }, (err) => {
+    res.status(404).send(err.message);
+  });
+})
+
+app.get('/users/:id', (req, res) => {
+  var id = req.params.id;
+  if (!ObjectID.isValid(id)) {
+    return res.status(404).send('Id is not Valid. Please Enter a Valid ID');
+  }
+  user.findById(req.params.id).then(
+    (docs) => {
+      if (docs) { res.status(200).send({ docs }); }
+      else {
+        res.status(404).send('No Matching Record Found');
+      }
+    },
+    (err) => {
+      res.status(404).send(err.message);
+    });
+})
+
+app.get('/todos/:id', (req, res) => {
+  var id = req.params.id;
+  if (!ObjectID.isValid(id)) {
+    return res.status(404).send('Id is not Valid. Please Enter a Valid ID');
+  }
+  todo.findById(id).then(
+    (docs) => {
+      if (docs) {
+        res.status(200).send({ docs });
+      }
+      else {
+        res.status(404).send('No Matching Record Found');
+      }
+    },
+    (err) => {
+      res.status(404).send(err.message);
+    });
+})
+
 app.listen(3000, () => {
   console.log('Listning to port 3000')
 })
-
-// var firstTodo = new todo({
-//   text: 'Make him Cry',
-// });
-
-
-
-// var firstUser = new user({
-//   name: 'Niteesh',
-//   email: 'nitish219@gmail.com'
-// })
-
-// firstUser.save().then(
-//   (docs) => {
-//     console.log('Insertion SuccessFull');
-//     console.log(docs);
-//   },
-//   (err) => {
-//     console.log('Unable to Insert data: ' + err.message);
-//   });
