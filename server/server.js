@@ -1,3 +1,4 @@
+require('../config/config');
 const express = require('express');
 const bodyParser = require('body-parser');
 const _ = require('lodash');
@@ -8,18 +9,16 @@ const { user } = require('../models/users');
 
 var app = express();
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 app.use(bodyParser.json());
 
 app.post('/todos', (req, res) => {
-  console.log(req.body);
   var newTodo = new todo({
     text: req.body.text
   });
 
   newTodo.save().then((docs) => {
-    console.log('Insertion SuccessFull');
     res.status(200).send(docs);
   }, (err) => {
     res.status(404).send('Insertion Unsuccessfull ' + err.message);
@@ -27,12 +26,8 @@ app.post('/todos', (req, res) => {
 });
 
 app.post('/users', (req, res) => {
-  console.log(req.body);
-  var newUser = new user({
-    name: req.body.name,
-    email: req.body.email
-  });
-
+  var body = _.pick(req.body, ['email', 'password']);
+  var newUser = new user(body);
   newUser.save().then(
     (docs) => {
       console.log('Insertion Successful');
@@ -41,15 +36,13 @@ app.post('/users', (req, res) => {
     (err) => {
       res.status(404).send('Insertion Unsuccessful ' + err.message);
     });
-
 });
 
 app.get('/todos', (req, res) => {
-  console.log(req.body);
   todo.find().
     then(
       (docs) => {
-        res.status(200).send(docs);
+        res.status(200).send({ docs });
       },
       (err) => {
         res.status(400).send(err.message);
@@ -142,7 +135,7 @@ app.patch('/todos/:id', (req, res) => {
     return res.status(404).send('Id is not Valid. Please Enter a Valid ID');
   }
 
-  if (_.isBoolean(body.completed && body.completed == true)) {
+  if (_.isBoolean(body.completed) && body.completed === true) {
     body.completedAt = new Date().toString();
   }
   else {
@@ -185,3 +178,5 @@ app.patch('/users/:id', (req, res) => {
 app.listen(port, () => {
   console.log('Listning to port ' + port)
 })
+
+module.exports.app = app;
