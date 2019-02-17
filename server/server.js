@@ -5,13 +5,33 @@ const _ = require('lodash');
 
 const { mongoose, ObjectID } = require('../db/mongoose');
 const { todo } = require('../models/todos');
-const { user } = require('../models/users');
+const { User } = require('../models/users');
+const { authenticate } = require('../middleware/authenticate');
 
 var app = express();
 
 const port = process.env.PORT;
 
 app.use(bodyParser.json());
+
+
+app.post('/users', (req, res) => {
+  var body = _.pick(req.body, ['email', 'password']);
+  var newUser = new User(body);
+  newUser.save().then(
+    () => {
+      return newUser.generateToken();
+    }).then((token) => {
+      res.header('x-auth', token).status(200).send(newUser);
+    }).catch(
+      (err) => {
+        res.status(404).send('Insertion Unsuccessful ' + err.message);
+      });
+});
+
+app.get('/users/me', authenticate, (req, res) => {
+  res.status(200).send(req.user);
+});
 
 app.post('/todos', (req, res) => {
   var newTodo = new todo({
@@ -25,19 +45,6 @@ app.post('/todos', (req, res) => {
   });
 });
 
-app.post('/users', (req, res) => {
-  var body = _.pick(req.body, ['email', 'password']);
-  var newUser = new user(body);
-  newUser.save().then(
-    (docs) => {
-      console.log('Insertion Successful');
-      res.status(200).send(docs);
-    },
-    (err) => {
-      res.status(404).send('Insertion Unsuccessful ' + err.message);
-    });
-});
-
 app.get('/todos', (req, res) => {
   todo.find().
     then(
@@ -47,32 +54,6 @@ app.get('/todos', (req, res) => {
       (err) => {
         res.status(400).send(err.message);
       });
-})
-
-app.get('/users', (req, res) => {
-  console.log(req.body);
-  user.find().then((docs) => {
-    res.status(200).send(docs);
-  }, (err) => {
-    res.status(404).send(err.message);
-  });
-})
-
-app.get('/users/:id', (req, res) => {
-  var id = req.params.id;
-  if (!ObjectID.isValid(id)) {
-    return res.status(404).send('Id is not Valid. Please Enter a Valid ID');
-  }
-  user.findById(req.params.id).then(
-    (docs) => {
-      if (docs) { res.status(200).send({ docs }); }
-      else {
-        res.status(404).send('No Matching Record Found');
-      }
-    },
-    (err) => {
-      res.status(404).send(err.message);
-    });
 })
 
 app.get('/todos/:id', (req, res) => {
@@ -111,23 +92,6 @@ app.delete('/todos/:id', (req, res) => {
   });
 });
 
-app.delete('/users/:id', (req, res) => {
-  var id = req.params.id;
-  if (!ObjectID.isValid(id)) {
-    return res.status(404).send('Id is not Valid. Please Enter a Valid ID');
-  }
-  user.findByIdAndDelete(id).then((docs) => {
-    if (docs) {
-      res.status(200).send({ docs });
-    }
-    else {
-      res.status(404).send('No Matching Record Found');
-    }
-  }, (err) => {
-    res.status(404).send(err.message);
-  });
-});
-
 app.patch('/todos/:id', (req, res) => {
   var id = req.params.id;
   var body = _.pick(req.body, ['text', 'completed']);
@@ -144,26 +108,6 @@ app.patch('/todos/:id', (req, res) => {
   }
 
   todo.findByIdAndUpdate(id, { $set: body }, { new: true }).then((docs) => {
-    if (docs) {
-      res.status(200).send({ docs });
-    }
-    else {
-      res.status(404).send('No Matching Record Found');
-    }
-  }, (err) => {
-    res.status(404).send(err.message);
-  });
-});
-
-
-app.patch('/users/:id', (req, res) => {
-  var id = req.params.id;
-  var body = _.pick(req.body, ['name', 'email']);
-  if (!ObjectID.isValid(id)) {
-    return res.status(404).send('Id is not Valid. Please Enter a Valid ID');
-  }
-
-  user.findByIdAndUpdate(id, { $set: body }, { new: true }).then((docs) => {
     if (docs) {
       res.status(200).send({ docs });
     }
