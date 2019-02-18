@@ -25,7 +25,7 @@ app.post('/users/login', (req, res) => {
         })
     })
     .catch((err) => {
-      res.status(400).send({ Message: err })
+      res.status(401).send({ Message: err })
     });
 });
 
@@ -49,7 +49,7 @@ app.post('/users', (req, res) => {
       res.header('x-auth', token).status(200).send(newUser);
     }).catch(
       (err) => {
-        res.status(404).send('Insertion Unsuccessful ' + err.message);
+        res.status(400).send({ Message: 'Insertion Unsuccessfull' });
       });
 });
 
