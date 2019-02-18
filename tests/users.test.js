@@ -153,4 +153,8 @@ describe('Users /Delete', function () {
           .catch((e) => done(e))
       });
   });
-}); 
+});
+
+module.exports = {
+  users, userOneID, userTwoID
+}
