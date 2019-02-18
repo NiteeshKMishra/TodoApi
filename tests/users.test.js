@@ -29,11 +29,13 @@ const users = [{
 }];
 
 beforeEach((done) => {
-  User.remove({}).then(() => {
-    var userOne = new User(users[0]).save();
-    var userTwo = new User(users[1]).save();
-    return Promise.all([userOne, userTwo])
-  }).then(() => done());
+  new User(users[0]).save();
+  new User(users[1]).save();
+  done();
+});
+
+afterEach((done) => {
+  User.deleteMany({}).then(() => done());
 });
 
 describe('Users /GET', () => {
@@ -41,7 +43,7 @@ describe('Users /GET', () => {
 
     request(app)
       .get('/users/me')
-      .expect(200)
+      .expect(401)
       .end(done);
   });
 });

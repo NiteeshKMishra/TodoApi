@@ -1,6 +1,11 @@
 const { mongoose } = require('../db/mongoose');
 
 var todo = mongoose.model('Todo', {
+
+  _userid: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true
+  },
   text: {
     type: String,
     required: true,

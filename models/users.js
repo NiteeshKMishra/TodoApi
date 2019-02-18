@@ -52,6 +52,31 @@ UserSchema.methods.generateToken = function () {
   });
 };
 
+UserSchema.methods.deleteToken = function (token) {
+  var user = this;
+
+  return user.update({
+    $pull: {
+      tokens: { token }
+    }
+  });
+}
+
+UserSchema.statics.findByCredentials = function (email, password) {
+  var User = this;
+  var newUser;
+  password = SHA256(password).toString();
+  return User.findOne({ email }).then((user) => {
+    if (!user) {
+      return Promise.reject('User is not present');
+    }
+    else if (user.password !== password) {
+      return Promise.reject('Please Enter a valid password');
+    }
+    return Promise.resolve(user);
+  })
+}
+
 UserSchema.statics.findByToken = function (token) {
   var User = this;
   var decoded;
